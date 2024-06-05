@@ -51,6 +51,10 @@ int joinPolygonsWithin_compressed(Polygon *polA, Polygon *polB);
 
 int joinPolygons_DE9IM(Polygon *polA, Polygon *polB);
 
+std::string computeDE9IMMatrix(Polygon *polA, Polygon *polB);
+
 
 
 int joinPolygons_uncompressed_galloping(Polygon *polA, Polygon *polB);
+
+int returnRelation(Polygon *polA, Polygon *polB);

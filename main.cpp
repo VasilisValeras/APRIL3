@@ -43,7 +43,7 @@ void saveStats(unsigned long long &result, double totalTime, double MBRFTime, do
 
     cout << "Intermediate Filter Effectiveness: " << endl;
     cout << fixed << setprecision(2) << "\t-Accepted: \t\t\t\t" << accepted / (double) postMBRCandidates * 100 << "%" << endl;
-    cout << fixed << setprecision(2) << "\t-Rejected: \t\t\t\t" << rejected / (double) postMBRCandidates * 100 << "%" << endl;
+    //cout << fixed << setprecision(2) << "\t-Rejected: \t\t\t\t" << rejected / (double) postMBRCandidates * 100 << "%" << endl;
     cout << fixed << setprecision(2) << "\t-Inconclusive: \t\t\t" << refinementCandidates / (double) postMBRCandidates * 100 << "%" << endl;
 
     cout << "***************************************************" << endl;
@@ -52,9 +52,9 @@ void saveStats(unsigned long long &result, double totalTime, double MBRFTime, do
     cout << "\t-Candidates after MBR Filter: \t" << postMBRCandidates << endl;
     
     if(REFINEMENT){
-        cout << "\t-Candidates after Refinement: \t" << refinementCandidates << endl;
-        cout << fixed << setprecision(1) << "\t\t--Average # of vertices of ref. candidates in " << argument1 << ": \t" << refinementCandidatesR / (double) (refinementCandidates) << " vertices." << endl;
-        cout << fixed << setprecision(1) << "\t\t--Average # of vertices of ref. candidates in " << argument2 << ": \t" << refinementCandidatesS / (double) (refinementCandidates) << " vertices." << endl;
+        cout << "\t-Candidates after Intermediate Filter: \t" << refinementCandidates << endl;
+        // cout << fixed << setprecision(1) << "\t\t--Average # of vertices of ref. candidates in " << argument1 << ": \t" << refinementCandidatesR / (double) (refinementCandidates) << " vertices." << endl;
+        // cout << fixed << setprecision(1) << "\t\t--Average # of vertices of ref. candidates in " << argument2 << ": \t" << refinementCandidatesS / (double) (refinementCandidates) << " vertices." << endl;
         // cout << "   Accepted AFTER refinement (as a percentage of the refinement candidates): \t" << acceptedAfterRefinement / (double) refinementCandidates * 100 << "%" << endl;
     }
 
@@ -70,22 +70,31 @@ void saveStats(unsigned long long &result, double totalTime, double MBRFTime, do
     cout << "***************************************************" << endl;
 }
 
-void printTopologicalStats(double DE9IM_Time) {
+void printTopologicalStats(double DE9IM_Time,double DE9IM_Time2) {
     cout << "***************************************************" << endl;
-    cout << fixed << setprecision(6) << "\t-DE-9IM-join time: \t\t\t\t" << DE9IM_Time << " sec." << endl;
+    cout << "Results found using APRIL: " << endl;
+    cout << "\t-R contains S pairs(APRIL): \t" << RcontainsS_DE9IM << endl;
+    cout << "\t-R contained by S pairs(APRIL): \t" << ScontainsR_DE9IM << endl;
+    cout << "\t- Disjoints pairs with filter(APRIL) : \t" << disjoints_DE9IM << endl;
+    cout << "***************************************************" << endl;
+    cout << "Results found with refinement step: " << endl;
     cout << "\t-Disjoint pairs: \t" << disjoints << endl;
     cout << "\t-Equal pairs: \t" << equals << endl;
-    /*cout << "\t-R inside S pairs: \t" << RinsideS << endl;
-    cout << "\t-S inside R pairs: \t" << SinsideR << endl;
-    cout << "\t-R covered by S pairs: \t" << RcoveredByS << endl;
-    cout << "\t-S covered by R pairs: \t" << ScoveredByR << endl; */
     cout << "\t-R contains S pairs: \t" << RcontainsS << endl;
     cout << "\t-S contains R pairs: \t" << ScontainsR << endl;
     cout << "\t-Touching pairs: \t" << touch << endl;
     cout << "\t-Intersect pairs: \t" << intersect << endl;
-    cout << "***************************************************" << endl;
-    cout << "\t-R contains S pairs with DE9IM: \t" << RcontainsS_DE9IM << endl;
-    cout << "\t-S contains R pairs with DE9IM: \t" << ScontainsR_DE9IM << endl;
+    cout << "" << endl;
+    cout << "Total Results" << endl;
+    cout << "\t-Disjoint pairs: \t" << disjoints + disjoints_DE9IM << endl;
+    cout << "\t-Equal pairs: \t" << equals << endl;
+    cout << "\t-R contains S pairs: \t" << RcontainsS + RcontainsS_DE9IM << endl;
+    cout << "\t-S contains R pairs: \t" << ScontainsR + ScontainsR_DE9IM << endl;
+    cout << "\t-Touching pairs: \t" << touch << endl;
+    cout << "\t-Intersect pairs: \t" << intersect << endl;
+    
+    
+    
     
 }
 
@@ -364,7 +373,7 @@ int main(int argc, char **argv)
 
         // DE-9IM results
         cout << "**********************DE-9IM**********************" << endl;
-        printTopologicalStats(DE_9IMTime);
+        printTopologicalStats(DE_9IMTime, DE_9IMTime2);
 
     }
  

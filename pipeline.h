@@ -51,6 +51,7 @@ string result_filename = "results_pairs.csv";
 double intermediateFilterTime = 0;
 double refinementTime = 0;
 double DE_9IMTime = 0;
+double DE_9IMTime2 = 0;
 
 int postMBRCandidates = 0;
 int accepted = 0;
@@ -61,10 +62,6 @@ int acceptedAfterRefinement = 0;
 //Topological relationships
 int equals = 0;
 int disjoints = 0;
-int RinsideS = 0;
-int SinsideR = 0;
-int RcoveredByS = 0;
-int ScoveredByR = 0;
 int touch = 0;
 int intersect = 0;
 int RcontainsS = 0;
@@ -73,6 +70,10 @@ int ScontainsR = 0;
 // for testing
 int ScontainsR_DE9IM = 0;
 int RcontainsS_DE9IM = 0;
+int disjoints_DE9IM = 0;
+int equals_DE9IM = 0;
+int touch_DE9IM = 0;
+int intersect_DE9IM = 0;
 
 
 clock_t timer;
@@ -398,141 +399,154 @@ void initiateRasterIntervalsCreation(string &argument1, string &argument2){
 void forwardCandidatePair(uint idA, uint idB){
         bool refFlag = false;
         int result=2;
+        int result2 = 0;
         postMBRCandidates++;
-        /*if(INTERMEDIATE_FILTER){
+
+        // if(INTERMEDIATE_FILTER){
+        //         timer = clock();
+        //         //find common sections
+        //         vector<uint> commonSections = DATA_SPACE.getCommonSectionsIDOfObjects(idA, idB);
+        //         //check in each common section
+        //         for(auto &secID : commonSections){
+        //                 result2 = (*join_DE9IM_pointer)(rasterIntervalsR.getPolygonByIDAndSection(secID, idA), rasterIntervalsS.getPolygonByIDAndSection(secID, idB));
+
+        //                 // Polygons are disjoint
+        //                 if(result2 == 0) {
+
+        //                         TOTAL_RESULTS++;
+        //                         accepted++;  
+                                
+        //                         disjoints_DE9IM++;
+        //                         //DE_9IMTime2 += (clock() - timer) / (double) CLOCKS_PER_SEC;
+        //                         intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+        //                         return;
+
+        //                 // R contains S
+        //                 } else if(result2 == 1) {
+        //                         // Write IDs to file for S inside R
+        //                         //writeIDsToFile(idA, idB, "R_contains_S_pairs_DE9IM.txt");
+
+        //                         TOTAL_RESULTS++;
+        //                         accepted++;
+
+        //                         RcontainsS_DE9IM++;
+        //                         //DE_9IMTime2 += (clock() - timer) / (double) CLOCKS_PER_SEC;
+        //                         intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+                                              
+        //                         return;
+
+        //                 // S contains R        
+        //                 } else if (result2 == 2) {
+
+        //                         TOTAL_RESULTS++;
+        //                         accepted++; 
+                                
+        //                         ScontainsR_DE9IM++;
+        //                         //DE_9IMTime2 += (clock() - timer) / (double) CLOCKS_PER_SEC; 
+        //                         intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+        //                         //writeIDsToFile(idA, idB, "S_contains_R_pairs_DE9IM.txt");
+
+        //                         return;
+       
+        //                 } else if (result == 3) {
+        //                         // mark for refinement
+        //                         refFlag = true;
+        //                 }
+        //         }
+
+        // }
+
+        if(INTERMEDIATE_FILTER) {
                 timer = clock();
                 //find common sections
                 vector<uint> commonSections = DATA_SPACE.getCommonSectionsIDOfObjects(idA, idB);
+                //std::string matrix;
                 //check in each common section
                 for(auto &secID : commonSections){
+                        //matrix = computeDE9IMMatrix(rasterIntervalsR.getPolygonByIDAndSection(secID, idA), rasterIntervalsS.getPolygonByIDAndSection(secID, idB));
+                        result2 =  returnRelation(rasterIntervalsR.getPolygonByIDAndSection(secID, idA), rasterIntervalsS.getPolygonByIDAndSection(secID, idB));
 
+                        if(result2 == DISJOINT) {
 
-                        // if(idA == 112853 && idB == 1872570){
-                        // }
-                        result = (*join_function_pointer)(rasterIntervalsR.getPolygonByIDAndSection(secID, idA), rasterIntervalsS.getPolygonByIDAndSection(secID, idB));
-
-                        // if(idB == 1872570){
-                        //         cout << idA << "," << idB << " result " << result << endl;
-                        // }
-
-                        //if hit
-                        if(result == 1){
-                                //accepted                        
                                 TOTAL_RESULTS++;
-                                accepted++;
-                                // saveResultPair(idA, idB);
+                                accepted++;  
+                                
+                                disjoints_DE9IM++;
+                                //DE_9IMTime2 += (clock() - timer) / (double) CLOCKS_PER_SEC;
                                 intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
                                 return;
-                        }else if(result == 2){
-                                //mark for refinement
-                                refFlag = true;
-                        }
-                }
-                //if it isn't marked for refinement, reject
-                if(!refFlag){
-                        //else rejected     
-                        rejected++;
-                        intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
-                        return;
-                }                           
-                intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
-        }
 
-        refinementCandidates++;  
-        if(REFINEMENT){
-                //needs refinement
-                timer = clock();
-                if((*refinement_function)(idA, idB, offsetMapR, offsetMapS, finR, finS)){
-                        TOTAL_RESULTS++;
-                        acceptedAfterRefinement++;
-                        // saveResultPair(idA, idB);
-                }
-                refinementTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
-        } */
+                        }else if(result2 == R_CONTAINS_S){
+                                TOTAL_RESULTS++;
+                                accepted++; 
 
-        timer = clock();
-        switch ((*DE_9IM_function)(idA, idB, offsetMapR, offsetMapS, finR, finS)) {
-                case 0:
-                        writeIDsToFile(idA, idB, "Results/disjoint_pairs.txt");
-                        disjoints += 1;
-                        break;
-                case 1:
-                        writeIDsToFile(idA, idB, "Results/equal_pairs.txt");
-                        equals += 1;
-                        break;
-                case 8:
-                        writeIDsToFile(idA, idB, "Results/R_contains_S.txt");
-                        RcontainsS += 1;
-                        break;
-                case 9:
-                        writeIDsToFile(idA, idB, "Results/S_contains_R.txt");
-                        ScontainsR += 1;
-                        break;
-                /*case 2:
-                        writeIDsToFile(idA, idB, "Results/R_inside_S_pairs.txt");
-                        RinsideS += 1;
-                        break;
-                case 3:
-                        SinsideR += 1;
-                        // Write IDs to file for S inside R
-                        writeIDsToFile(idA, idB, "Results/S_inside_R_pairs.txt");
-                        break;
-                case 4:
-                        writeIDsToFile(idA, idB, "Results/R_covered_By_S_pairs.txt");
-                        RcoveredByS += 1;
-                        break;
-                case 5:
-                        writeIDsToFile(idA, idB, "Results/S_covered_By_R_pairs.txt");
-                        ScoveredByR += 1;
-                        break; */
-                case 6:
-                        writeIDsToFile(idA, idB, "Results/touch_pairs.txt");
-                        touch += 1;
-                        break;
-                case 7:
-                        writeIDsToFile(idA, idB, "Results/intersect_pairs.txt");
-                        intersect += 1;
-                        break;
-                
-        }
-
-        DE_9IMTime += (clock() - timer) / (double) CLOCKS_PER_SEC; 
-
-        
-
-        // for testing
-        int result2 = 0;
-        vector<uint> commonSections = DATA_SPACE.getCommonSectionsIDOfObjects(idA, idB);
-                for(auto &secID : commonSections){
-                        result2 = (*join_DE9IM_pointer)(rasterIntervalsR.getPolygonByIDAndSection(secID, idA), rasterIntervalsS.getPolygonByIDAndSection(secID, idB));
-
-                        if(result2==3) {
-                                // Write IDs to file for S inside R
-                                writeIDsToFile(idA, idB, "S_contains_R_pairs_DE9IM.txt");
-                                ScontainsR_DE9IM++;
-                                
-                                return;
-                        } else if (result2 == 1) {
                                 RcontainsS_DE9IM++;
-                                writeIDsToFile(idA, idB, "R_contains_S_pairs_DE9IM.txt");
+                                intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
                                 return;
-                        
-                        }else if (result2==2) {
-                                if((*DE_9IM_function)(idA, idB, offsetMapR, offsetMapS, finR, finS)==8){
-                                        // Write IDs to file for S inside R
-                                        //writeIDsToFile(idA, idB, "R_contains_S_pairs_DE9IM.txt");
-                                        RcontainsS_DE9IM++;
-                                        writeIDsToFile(idA, idB, "R_contains_S_pairs_DE9IM.txt");
+
+                        }else if(result2 == S_CONTAINS_R) {
+                                TOTAL_RESULTS++;
+                                accepted++; 
                                 
-                                        return;
-                                }else if ((*DE_9IM_function)(idA, idB, offsetMapR, offsetMapS, finR, finS)==9){
-                                      ScontainsR_DE9IM++;
-                                      writeIDsToFile(idA, idB, "S_contains_R_pairs_DE9IM.txt");
-                                      return;  
-                                }
-
-                        } 
+                                // R contained by S
+                                ScontainsR_DE9IM++;
+                                intermediateFilterTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+                                return;
+                        }else if(result2 == REFINEMENT_STEP) {
+                                // mark for refinement
+                                refFlag = true;
+                        }       
                 }
-}
+        }
 
+        refinementCandidates++;
+        if(REFINEMENT){
+                timer = clock();
+                
+                switch ((*DE_9IM_function)(idA, idB, offsetMapR, offsetMapS, finR, finS)) {
+                        case 0:
+                                //writeIDsToFile(idA, idB, "Results/disjoint_pairs.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                disjoints += 1;
+                                break;
+                        case 1:
+                                //writeIDsToFile(idA, idB, "Results/equal_pairs.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                equals += 1;
+                                break;
+                        case 2:
+                                //writeIDsToFile(idA, idB, "Results/R_contains_S.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                RcontainsS += 1;
+                                break;
+                        case 3:
+                                //writeIDsToFile(idA, idB, "Results/S_contains_R.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                ScontainsR += 1;
+                                break;
+                        
+                        case 4:
+                                //writeIDsToFile(idA, idB, "Results/touch_pairs.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                touch += 1;
+                                break;
+                        case 5:
+                                //writeIDsToFile(idA, idB, "Results/intersect_pairs.txt");
+                                TOTAL_RESULTS++;
+                                acceptedAfterRefinement++;
+                                intersect += 1;
+                                break;
+                        
+                }
+                //DE_9IMTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+                refinementTime += (clock() - timer) / (double) CLOCKS_PER_SEC;
+        }
+                             
+}
+        
 #endif

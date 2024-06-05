@@ -1,6 +1,7 @@
 #include "join.h"
 
 
+
 /*
 *-------------------------------------------------------
 *
@@ -9,6 +10,11 @@
 *
 *-------------------------------------------------------
 */
+
+char disjointCode2[] = "FF*FF****";
+char containsCode2[] = "T*****FF*";
+char insideCode2[] = "T*F**F***";
+
 
 void nextinterval(CONTAINER *ar, uint *offset, ID *st, ID *end)
 {
@@ -253,7 +259,7 @@ int compareIntervals(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint
 	return 0;
 }
 
-int compareExternal(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint &numintervals2, vector<ID> &ar3, uint &numintervals3){
+int compareExternal(vector<uint32_t> &ar1, uint &numintervals1, vector<uint32_t> &ar2, uint &numintervals2, vector<uint32_t> &ar3, uint &numintervals3){
     
     if(numintervals1 == 0 || numintervals2 == 0){
         return 0;
@@ -261,18 +267,11 @@ int compareExternal(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint 
 
     uint cur1 = 0;
     uint cur2 = 0;
-	
-	
-    //auto st1 = min(ar3.begin(), ar2.begin()); 
-	// Using min to compare values at the beginning of ar2 and ar3
-    auto minVal = std::min(*ar2.begin(), *ar3.begin());
-    auto st1 = ar3.begin();
-	
-	
-    auto end1 = ar1.begin();
 
-	
-    
+	auto st1 = (*ar2.begin() < *ar3.begin()) ? ar2.begin() : ar3.begin();
+    auto end1 = ar1.begin();
+	cur1++;
+
     auto st2 = ar2.begin();
     auto end2 = ar2.begin() + 1;
     cur2++;
@@ -280,23 +279,24 @@ int compareExternal(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint 
     bool isFirstIteration = true;
 
     do {
+		if(*st1 == *st2){
+			return 1;
+		}
         if (*st1 < *st2) {
             if (*end1 >= *st2) {
                 return 1;
             } else {
-                if (isFirstIteration) {
+                if (cur1 == numintervals1) {
+                    
+                    st1 = ar1.end()-1; 
+					end1 = (*(ar2.end()-1) > *(ar3.end()-1)) ? ar2.end()-1 : ar3.end()-1;
+                    cur1++;
+                } else if(isFirstIteration){
                     st1 = ar1.begin() + 1;
                     end1 = ar1.begin() + 2;
-                    cur1 = 1;
-                    isFirstIteration = false;
-                } else if(cur1+1 == numintervals1){
-                    st1 = ar1.end(); 
-
-
-                    //end1 = max(ar3.end(), end2); 
-					auto maxVal = std::max(*ar2.end(), *ar3.end());
-					end1 = ar3.end();
                     cur1++;
+                    isFirstIteration = false;
+                    
                 } else {
                     st1 += 2;
                     end1 += 2;
@@ -304,7 +304,7 @@ int compareExternal(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint 
                 }
             }
         } else {
-            if (*end2 > *st1) {
+            if (*end2 >= *st1) {
                 return 1;
             } else {
                 st2 += 2;
@@ -312,17 +312,10 @@ int compareExternal(vector<ID> &ar1, uint &numintervals1, vector<ID> &ar2, uint 
                 cur2++;
             }
         }
-    } while(cur1 <= numintervals1 && cur2 <= numintervals2);
+    } while(cur1 <= numintervals1+1 && cur2 <= numintervals2);
 
     return 0;
 }
-
-
-
-
-
-
-
 
 
 bool intervalsOverlap(ID &st1, ID &end1, ID &st2, ID &end2){
@@ -528,76 +521,153 @@ int joinPolygons_uncompressed(Polygon *polA, Polygon *polB){
 // DE-9IM addition
 int joinPolygons_DE9IM(Polygon *polA, Polygon *polB) {
 
-	if(polA->recID == 9718& polB->recID == 155102) {
-		// Print contents of uncompressedALL for polA
-		std::cout << "polA uncompressedALL: ";
-		for (const auto& id : polA->uncompressedALL) {
-			std::cout << id << " ";
-		}
-		std::cout << std::endl;
-		
-		// Print contents of uncompressedF for polA
-		std::cout << "polA uncompressedF: ";
-		for (const auto& id : polA->uncompressedF) {
-			std::cout << id << " ";
-		}
-		std::cout << std::endl;
-		
-		// Print contents of uncompressedALL for polB
-		std::cout << "polB uncompressedALL: ";
-		for (const auto& id : polB->uncompressedALL) {
-			std::cout << id << " ";
-		}
-		std::cout << std::endl;
-		
-		// Print contents of uncompressedF for polB
-		std::cout << "polB uncompressedF: ";
-		for (const auto& id : polB->uncompressedF) {
-			std::cout << id << " ";
-		}
-		std::cout << std::endl;
-	}
+	//bool flag = false;
+
 	//check ALL - ALL
 	if(compareIntervals(polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedALL, polB->numIntervalsALL) == 0){
 		//guaranteed not hit
 		return 0;
 	}
 
+	//check F - ALL (if any F in A)
+	if(polA->F){
+		if(compareIntervals(polA->uncompressedF, polA->numIntervalsF, polB->uncompressedALL, polB->numIntervalsALL)){
+
+			//flag = true;
+
+			if(compareExternal(polA->uncompressedF, polA->numIntervalsF, polB->uncompressedALL, polB->numIntervalsALL, polA->uncompressedALL, polA->numIntervalsALL) == 0) {
+				return 1;
+			}
+
+		}
+	}
+
 	//check ALL - F (if any F in B)
 	if(polB->F){
 		if(compareIntervals(polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedF, polB->numIntervalsF)){
 			//hit
+			//flag = true;
 
 			if(compareExternal(polB->uncompressedF, polB->numIntervalsF, polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedALL, polB->numIntervalsALL) == 0) {
-				return 3;
-			}
-			
-			if(polA->F){
-				if(compareExternal(polA->uncompressedF, polA->numIntervalsF, polB->uncompressedALL, polB->numIntervalsALL, polA->uncompressedALL, polA->numIntervalsALL) == 0) {
-					return 1;
-				} 
+				return 2;
 			}
 		}
+	}
+
+	// if(flag) {
+	// 	// intersect
+	// 	return 4;
+	// }
+
+	// send for refinement
+	return 3;
+}
+
+static inline bool compareDe9imCharacters(char character, char char_mask) {
+    if (character != 'F' && char_mask == 'T') {
+        // character is 0,1,2 and char_mask is T
+        return true;
+    } else if (character == 'F' && char_mask == 'F'){
+        // both are F
+        return true;
+    } else {
+        // no match
+        return false;
+    }
+}
+
+static inline bool compareDE9IMMasks(std::string &de9imCode, char* maskCode) {
+    for(int i=0; i<9; i++) {
+        if (de9imCode[i] == '*' || maskCode[i] == '*' || compareDe9imCharacters(de9imCode[i], maskCode[i])){
+            continue;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+// this function will use APRIL to compute the DE-9IM matrix
+std::string computeDE9IMMatrix(Polygon *polA, Polygon *polB){
+
+	std::string matrix = "--------*";
+
+	// we first check the ALL-ALL intervals
+	// if no intersection we return the matrix 
+	if(compareIntervals(polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedALL, polB->numIntervalsALL) == 0){
+		// Guaranteed no hit, set relevant cells
+        matrix[0] = 'F'; 
+        matrix[1] = 'F'; 
+        matrix[3] = 'F'; 
+        matrix[4] = 'F'; 
+
+		return matrix;
 	}
 
 	//check F - ALL (if any F in A)
 	if(polA->F){
 		if(compareIntervals(polA->uncompressedF, polA->numIntervalsF, polB->uncompressedALL, polB->numIntervalsALL)){
-			//hit
-			if(polB->F){
-				if(compareExternal(polB->uncompressedF, polB->numIntervalsF, polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedALL, polB->numIntervalsALL) == 0) {
-					return 3;
-				}
-			}
+
+			matrix[0] = 'T';
 
 			if(compareExternal(polA->uncompressedF, polA->numIntervalsF, polB->uncompressedALL, polB->numIntervalsALL, polA->uncompressedALL, polA->numIntervalsALL) == 0) {
-				return 1;
+				matrix[1] = 'T'; 
+        		matrix[2] = 'T'; 
+        		matrix[3] = 'F';
+				matrix[4] = 'F';
+				matrix[5] = 'T'; 
+        		matrix[6] = 'F'; 
+				matrix[7] = 'F'; 
+				//matrix[8] = 'T';
 			}
-			
+
 		}
 	}
 
-	return 2;
+	//check ALL - F (if any F in B)
+	if(polB->F){
+		if(compareIntervals(polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedF, polB->numIntervalsF)){
+
+			matrix[0] = 'T';
+
+			if(compareExternal(polB->uncompressedF, polB->numIntervalsF, polA->uncompressedALL, polA->numIntervalsALL, polB->uncompressedALL, polB->numIntervalsALL) == 0) {
+				matrix[1] = 'F'; 
+        		matrix[2] = 'F'; 
+        		matrix[3] = 'T';
+				matrix[4] = 'F';
+				matrix[5] = 'F'; 
+        		matrix[6] = 'T'; 
+				matrix[7] = 'T'; 
+				//matrix[8] = 'T';
+			}
+		}
+	}
+
+
+	return matrix; // return the DE9IM Matrix
+}
+
+int returnRelation(Polygon *polA, Polygon *polB){
+	std::string de9imMatrix = computeDE9IMMatrix(polA, polB);
+
+	//disjoint
+    if(compareDE9IMMasks(de9imMatrix, disjointCode2)){
+		//std::cout << "DE-9IM Matrix: " << de9imMatrix << std::endl;
+        return DISJOINT;
+	}
+
+	// R contains S
+	if(compareDE9IMMasks(de9imMatrix, containsCode2)) {
+		return R_CONTAINS_S;		
+	}
+
+	// R contained by S
+	if(compareDE9IMMasks(de9imMatrix, insideCode2)) {
+		//std::cout << "DE-9IM Matrix: " << de9imMatrix << std::endl;
+		return S_CONTAINS_R; // R contained by S
+	}
+	//std::cout << "DE-9IM Matrix: " << de9imMatrix << std::endl;
+	return REFINEMENT_STEP;
 }
 
 //join two uncompressed APRIL approximations
